@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	for i := 0; i < 1_000_000; i++ {
+	for i := 0; i < 10000; i++ {
 
 		id := uuid.New() // 16 bytes
 		lat := 37.7749   // float64 (8 bytes)

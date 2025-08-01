@@ -7,9 +7,8 @@ import (
 )
 
 type Driver struct {
-	id        uuid.UUID
-	username  string
-	last_seen time.Time
-	latitude  float64
-	longitude float64
+	Id        uuid.UUID
+	Last_seen time.Time
+	Latitude  float64
+	Longitude float64
 }
