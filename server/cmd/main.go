@@ -7,11 +7,25 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/StevenSopilidis/driver-locator-service/internal/infrastructure/config"
 	"github.com/StevenSopilidis/driver-locator-service/internal/infrastructure/handlers"
+	"github.com/StevenSopilidis/driver-locator-service/internal/infrastructure/repository"
 )
 
 func main() {
-	server, err := handlers.NewUDPServer("0.0.0.0", 8080, 100_000)
+	config, err := config.NewConfig(".")
+	if err != nil {
+		log.Fatalf("Failed to read in config, %s", err.Error())
+	}
+
+	repo, err := repository.NewRedisRepo(config.RedisAddr, config.TTL)
+	if err != nil {
+		log.Fatalf("Could not create redis repo: %s", err.Error())
+	}
+
+	server, err := handlers.NewUDPServer(
+		config.UdpAddr, config.UdpPort,
+		config.MaxConcurrentRequests, repo)
 	defer server.Shutdown()
 
 	if err != nil {

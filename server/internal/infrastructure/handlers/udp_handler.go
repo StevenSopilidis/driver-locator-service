@@ -6,10 +6,10 @@ import (
 	"log"
 	"math"
 	"net"
-	"time"
 
 	"github.com/StevenSopilidis/driver-locator-service/internal/domain"
 	workerpool "github.com/StevenSopilidis/driver-locator-service/internal/infrastructure/worker_pool"
+	"github.com/StevenSopilidis/driver-locator-service/internal/interfaces"
 	"github.com/google/uuid"
 )
 
@@ -19,9 +19,10 @@ type UDPServer struct {
 	port               int
 	max_concurent_reqs int
 	dataCh             chan *domain.Driver
+	repo               interfaces.DriverRepo
 }
 
-func NewUDPServer(addr string, port int, max_concurent_reqs int) (*UDPServer, error) {
+func NewUDPServer(addr string, port int, max_concurent_reqs int, repo interfaces.DriverRepo) (*UDPServer, error) {
 	udpAddr := net.UDPAddr{
 		Port: port,
 		IP:   net.ParseIP(addr),
@@ -40,6 +41,7 @@ func NewUDPServer(addr string, port int, max_concurent_reqs int) (*UDPServer, er
 		port:               port,
 		max_concurent_reqs: max_concurent_reqs,
 		dataCh:             dataCh,
+		repo:               repo,
 	}, nil
 }
 
@@ -102,7 +104,6 @@ func (s *UDPServer) handleRequest(data []byte, addr *net.UDPAddr) {
 		Id:        id,
 		Latitude:  lat,
 		Longitude: lng,
-		Last_seen: time.Now(),
 	}
 }
 
