@@ -18,8 +18,8 @@ type UDPServer struct {
 	addr               string
 	port               int
 	max_concurent_reqs int
-	dataCh             chan *domain.Driver
 	repo               interfaces.DriverRepo
+	dataCh             chan domain.Driver
 }
 
 func NewUDPServer(addr string, port int, max_concurent_reqs int, repo interfaces.DriverRepo) (*UDPServer, error) {
@@ -33,7 +33,7 @@ func NewUDPServer(addr string, port int, max_concurent_reqs int, repo interfaces
 		return nil, err
 	}
 
-	dataCh := make(chan *domain.Driver, max_concurent_reqs)
+	dataCh := make(chan domain.Driver, max_concurent_reqs)
 
 	return &UDPServer{
 		conn:               conn,
@@ -46,11 +46,11 @@ func NewUDPServer(addr string, port int, max_concurent_reqs int, repo interfaces
 }
 
 func (s *UDPServer) ListenAndServe(ctx context.Context) {
-	log.Printf("Server starting at: %s:%d", s.addr, s.port)
+	log.Printf("Server starting at: %s:%d\n", s.addr, s.port)
 
 	sem := make(chan struct{}, s.max_concurent_reqs)
 
-	pool := workerpool.NewWorkerPool()
+	pool := workerpool.NewWorkerPool(s.repo)
 	go pool.Run(s.dataCh)
 
 	for {
@@ -71,13 +71,13 @@ func (s *UDPServer) ListenAndServe(ctx context.Context) {
 					continue
 				}
 
-				log.Printf("Read error: %v", err)
+				log.Printf("Read error: %v\n", err)
 				<-sem
 				continue
 			}
 
 			if n != 32 {
-				log.Printf("Received %d bytes expected %d", n, 32)
+				log.Printf("Received %d bytes expected %d\n", n, 32)
 				continue
 			}
 
@@ -100,7 +100,7 @@ func (s *UDPServer) handleRequest(data []byte, addr *net.UDPAddr) {
 	lat := math.Float64frombits(binary.BigEndian.Uint64(data[16:24]))
 	lng := math.Float64frombits(binary.BigEndian.Uint64(data[24:32]))
 
-	s.dataCh <- &domain.Driver{
+	s.dataCh <- domain.Driver{
 		Id:        id,
 		Latitude:  lat,
 		Longitude: lng,
